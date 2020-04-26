@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration = \
+  com.github.morulay.shiro.aad.spring.boot.autoconfigure.ShiroAadAutoconfiguration
