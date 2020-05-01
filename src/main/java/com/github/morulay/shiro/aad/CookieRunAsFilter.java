@@ -21,10 +21,7 @@ import org.apache.shiro.web.servlet.Cookie.SameSiteOptions;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.util.WebUtils;
 
-/**
- * Inspired by and mostly copy & paste from {@link CookieRememberMeManager}
- *
- */
+/** Inspired by and mostly copy & paste from {@link CookieRememberMeManager} */
 @Slf4j
 public class CookieRunAsFilter extends PathMatchingFilter {
 
@@ -77,12 +74,11 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Returns the {@code Serializer} used to serialize and deserialize {@link PrincipalCollection}
    * instances for persistent remember me storage.
    *
-   * <p>
-   * Unless overridden by the {@link #setSerializer} method, the default instance is a
-   * {@link org.apache.shiro.io.DefaultSerializer}.
+   * <p>Unless overridden by the {@link #setSerializer} method, the default instance is a {@link
+   * org.apache.shiro.io.DefaultSerializer}.
    *
    * @return the {@code Serializer} used to serialize and deserialize {@link PrincipalCollection}
-   *         instances for persistent remember me storage.
+   *     instances for persistent remember me storage.
    */
   public Serializer<PrincipalCollection> getSerializer() {
     return serializer;
@@ -92,11 +88,10 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Sets the {@code Serializer} used to serialize and deserialize {@link PrincipalCollection}
    * instances for persistent remember me storage.
    *
-   * <p>
-   * Unless overridden by this method, the default instance is a {@link DefaultSerializer}.
+   * <p>Unless overridden by this method, the default instance is a {@link DefaultSerializer}.
    *
-   * @param serializer the {@code Serializer} used to serialize and deserialize
-   *        {@link PrincipalCollection} instances for persistent remember me storage.
+   * @param serializer the {@code Serializer} used to serialize and deserialize {@link
+   *     PrincipalCollection} instances for persistent remember me storage.
    */
   public void setSerializer(Serializer<PrincipalCollection> serializer) {
     this.serializer = serializer;
@@ -106,12 +101,11 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Returns the {@code CipherService} to use for encrypting and decrypting serialized identity data
    * to prevent easy inspection of Subject identity data.
    *
-   * <p>
-   * Unless overridden by the {@link #setCipherService} method, the default instance is an
-   * {@link AesCipherService}.
+   * <p>Unless overridden by the {@link #setCipherService} method, the default instance is an {@link
+   * AesCipherService}.
    *
    * @return the {@code Cipher} to use for encrypting and decrypting serialized identity data to
-   *         prevent easy inspection of Subject identity data
+   *     prevent easy inspection of Subject identity data
    */
   public CipherService getCipherService() {
     return cipherService;
@@ -121,25 +115,22 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Sets the {@code CipherService} to use for encrypting and decrypting serialized identity data to
    * prevent easy inspection of Subject identity data.
    *
-   * <p>
-   * If the CipherService is a symmetric CipherService (using the same key for both encryption and
-   * decryption), you should set your key via the {@link #setCipherKey(byte[])} method.
+   * <p>If the CipherService is a symmetric CipherService (using the same key for both encryption
+   * and decryption), you should set your key via the {@link #setCipherKey(byte[])} method.
    *
-   * <p>
-   * If the CipherService is an asymmetric CipherService (different keys for encryption and
+   * <p>If the CipherService is an asymmetric CipherService (different keys for encryption and
    * decryption, such as public/private key pairs), you should set your encryption and decryption
-   * key via the respective {@link #setEncryptionCipherKey(byte[])} and
-   * {@link #setDecryptionCipherKey(byte[])} methods.
+   * key via the respective {@link #setEncryptionCipherKey(byte[])} and {@link
+   * #setDecryptionCipherKey(byte[])} methods.
    *
-   * <p>
-   * <b>N.B.</b> Unless overridden by this method, the default CipherService instance is an
+   * <p><b>N.B.</b> Unless overridden by this method, the default CipherService instance is an
    * {@link AesCipherService}. This {@code RememberMeManager} implementation already has a
    * configured symmetric key to use for encryption and decryption, but it is recommended to provide
    * your own for added security. See the class-level JavaDoc for more information and why it might
    * be good to provide your own.
    *
    * @param cipherService the {@code CipherService} to use for encrypting and decrypting serialized
-   *        identity data to prevent easy inspection of Subject identity data.
+   *     identity data to prevent easy inspection of Subject identity data.
    */
   public void setCipherService(CipherService cipherService) {
     this.cipherService = cipherService;
@@ -189,16 +180,14 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Convenience method that returns the cipher key to use for <em>both</em> encryption and
    * decryption.
    *
-   * <p>
-   * <b>N.B.</b> This method can only be called if the underlying {@link #getCipherService()
+   * <p><b>N.B.</b> This method can only be called if the underlying {@link #getCipherService()
    * cipherService} is a symmetric CipherService which by definition uses the same key for both
    * encryption and decryption. If using an asymmetric CipherService public/private key pair, you
-   * cannot use this method, and should instead use the {@link #getEncryptionCipherKey()} and
-   * {@link #getDecryptionCipherKey()} methods individually.
+   * cannot use this method, and should instead use the {@link #getEncryptionCipherKey()} and {@link
+   * #getDecryptionCipherKey()} methods individually.
    *
-   * <p>
-   * The default {@link AesCipherService} instance is a symmetric cipher service, so this method can
-   * be used if you are using the default.
+   * <p>The default {@link AesCipherService} instance is a symmetric cipher service, so this method
+   * can be used if you are using the default.
    *
    * @return the symmetric cipher key used for both encryption and decryption.
    */
@@ -211,17 +200,15 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   /**
    * Convenience method that sets the cipher key to use for <em>both</em> encryption and decryption.
    *
-   * <p>
-   * <b>N.B.</b> This method can only be called if the underlying {@link #getCipherService()
+   * <p><b>N.B.</b> This method can only be called if the underlying {@link #getCipherService()
    * cipherService} is a symmetric CipherService?which by definition uses the same key for both
    * encryption and decryption. If using an asymmetric CipherService?(such as a public/private key
-   * pair), you cannot use this method, and should instead use the
-   * {@link #setEncryptionCipherKey(byte[])} and {@link #setDecryptionCipherKey(byte[])} methods
+   * pair), you cannot use this method, and should instead use the {@link
+   * #setEncryptionCipherKey(byte[])} and {@link #setDecryptionCipherKey(byte[])} methods
    * individually.
    *
-   * <p>
-   * The default {@link AesCipherService} instance is a symmetric CipherService, so this method can
-   * be used if you are using the default.
+   * <p>The default {@link AesCipherService} instance is a symmetric CipherService, so this method
+   * can be used if you are using the default.
    *
    * @param cipherKey the symmetric cipher key to use for both encryption and decryption.
    */
@@ -236,8 +223,7 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Converts the given principal collection the byte array that will be persisted to be
    * 'remembered' later.
    *
-   * <p>
-   * This implementation first {@link #serialize(org.apache.shiro.subject.PrincipalCollection)
+   * <p>This implementation first {@link #serialize(org.apache.shiro.subject.PrincipalCollection)
    * serializes} the principals to a byte array and then {@link #encrypt(byte[]) encrypts} that byte
    * array.
    *
@@ -259,7 +245,7 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    *
    * @param bytes the bytes to decrypt if necessary and then deserialize.
    * @param subjectContext the contextual data, usually provided by a {@link Subject.Builder}
-   *        implementation, that is being used to construct a {@link Subject} instance.
+   *     implementation, that is being used to construct a {@link Subject} instance.
    * @return the de-serialized and possibly decrypted principals
    */
   protected PrincipalCollection convertBytesToPrincipals(byte[] bytes) {
@@ -290,7 +276,7 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    *
    * @param encrypted the encrypted byte array to decrypt
    * @return the decrypted byte array returned by the configured {@link #getCipherService ()
-   *         cipher}.
+   *     cipher}.
    */
   protected byte[] decrypt(byte[] encrypted) {
     byte[] serialized = encrypted;
@@ -303,8 +289,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   }
 
   /**
-   * Serializes the given {@code principals} by serializing them to a byte array by using the
-   * {@link #getSerializer() serializer}'s {@link Serializer#serialize(Object) serialize} method.
+   * Serializes the given {@code principals} by serializing them to a byte array by using the {@link
+   * #getSerializer() serializer}'s {@link Serializer#serialize(Object) serialize} method.
    *
    * @param principals the principal collection to serialize to a byte array
    * @return the serialized principal collection in the form of a byte array
@@ -314,8 +300,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   }
 
   /**
-   * De-serializes the given byte array by using the {@link #getSerializer() serializer}'s
-   * {@link Serializer#deserialize deserialize} method.
+   * De-serializes the given byte array by using the {@link #getSerializer() serializer}'s {@link
+   * Serializer#deserialize deserialize} method.
    *
    * @param serializedIdentity the previously serialized {@code PrincipalCollection} as a byte array
    * @return the de-serialized (reconstituted) {@code PrincipalCollection}
@@ -340,8 +326,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
     return convertBytesToPrincipals(decoded);
   }
 
-  public void storeRunAs(PrincipalCollection principals, HttpServletRequest request,
-      HttpServletResponse response) {
+  public void storeRunAs(
+      PrincipalCollection principals, HttpServletRequest request, HttpServletResponse response) {
     byte[] bytes = convertPrincipalsToBytes(principals);
     String base64 = Base64.encodeToString(bytes);
     Cookie runAsCookie = new SimpleCookie(runAsCookieTemplate);
@@ -356,8 +342,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   }
 
   @Override
-  protected boolean onPreHandle(ServletRequest request, ServletResponse response,
-      Object mappedValue) throws Exception {
+  protected boolean onPreHandle(
+      ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
 
     HttpServletRequest httpRequest = WebUtils.toHttp(request);
     HttpServletResponse httpResponse = WebUtils.toHttp(response);
@@ -384,7 +370,6 @@ public class CookieRunAsFilter extends PathMatchingFilter {
     HttpServletRequest httpRequest = WebUtils.toHttp(request);
     HttpServletResponse httpResponse = WebUtils.toHttp(response);
 
-
     Subject subject = SecurityUtils.getSubject();
     if (subject.isAuthenticated() && subject.isRunAs()) {
       storeRunAs(subject.getPrincipals(), httpRequest, httpResponse);
@@ -397,8 +382,7 @@ public class CookieRunAsFilter extends PathMatchingFilter {
    * Sometimes a user agent will send the rememberMe cookie value without padding, most likely
    * because {@code =} is a separator in the cookie header.
    *
-   * <p>
-   * Contributed by Luis Arias. Thanks Luis!
+   * <p>Contributed by Luis Arias. Thanks Luis!
    *
    * @param base64 the base64 encoded String that may need to be padded
    * @return the base64 String padded if necessary.

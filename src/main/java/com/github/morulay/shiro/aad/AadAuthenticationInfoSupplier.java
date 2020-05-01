@@ -1,6 +1,7 @@
 package com.github.morulay.shiro.aad;
 
 import static java.lang.String.format;
+
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -33,8 +34,8 @@ public class AadAuthenticationInfoSupplier implements Authenticator {
   private String clientId;
   private PrincipalFactory principalFactory;
 
-  public AadAuthenticationInfoSupplier(String authority, String tenantId, String clientId,
-      PrincipalFactory principalFactory) {
+  public AadAuthenticationInfoSupplier(
+      String authority, String tenantId, String clientId, PrincipalFactory principalFactory) {
     this.authority = authority;
     this.tenantId = tenantId;
     this.clientId = clientId;
@@ -68,8 +69,10 @@ public class AadAuthenticationInfoSupplier implements Authenticator {
     principals.add(username, "Azure Active Directory realm");
     principals.add(idToken, "Azure Active Directory realm");
     principals.add(principalFactory.createPrincipal(username), "Application realm");
-    return new SimpleAuthenticationInfo(principalFactory.createPrincipal(username),
-        token.getCredentials(), "Azure Active Directory realm");
+    return new SimpleAuthenticationInfo(
+        principalFactory.createPrincipal(username),
+        token.getCredentials(),
+        "Azure Active Directory realm");
   }
 
   private boolean supports(AuthenticationToken token) {
@@ -87,10 +90,14 @@ public class AadAuthenticationInfoSupplier implements Authenticator {
         new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, keySource);
     jwtProcessor.setJWSKeySelector(keySelector);
 
-    jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<SecurityContext>(
-        new JWTClaimsSet.Builder().issuer(format("%s/%s/v2.0", authority, tenantId))
-            .audience(clientId).build(),
-        new HashSet<String>(Arrays.asList("sub", "iat", "exp", "nonce", "preferred_username"))));
+    jwtProcessor.setJWTClaimsSetVerifier(
+        new DefaultJWTClaimsVerifier<SecurityContext>(
+            new JWTClaimsSet.Builder()
+                .issuer(format("%s/%s/v2.0", authority, tenantId))
+                .audience(clientId)
+                .build(),
+            new HashSet<String>(
+                Arrays.asList("sub", "iat", "exp", "nonce", "preferred_username"))));
     return jwtProcessor.process(idToken, null);
   }
 }

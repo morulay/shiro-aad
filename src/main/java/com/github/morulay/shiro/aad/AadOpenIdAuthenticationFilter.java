@@ -2,6 +2,7 @@ package com.github.morulay.shiro.aad;
 
 import static java.lang.String.format;
 import static java.util.Map.entry;
+
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;

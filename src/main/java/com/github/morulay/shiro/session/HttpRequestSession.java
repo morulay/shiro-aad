@@ -18,7 +18,6 @@ import org.apache.shiro.web.servlet.ShiroHttpSession;
  * of Shiro's session-related components {@code SessionManager}, {@code SecurityManager}, etc, and
  * instead satisfies all method implementations by interacting with a servlet container provided
  * {@link HttpServletRequest HttpServletRequest} instance.
- *
  */
 public class HttpRequestSession implements Session {
 

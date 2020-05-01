@@ -4,18 +4,53 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.morulay.shiro</groupId>
+	<groupId>com.github.morulay</groupId>
 	<artifactId>shiro-aad</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+	<description>Apache Shiro integration with Azure Active Directory</description>
+	<url>https://github.com/morulay/shiro-aad</url>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Morulay Planinski</name>
+			<email>morulay@yahoo.com</email>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:https://github.com/morulay/shiro-aad.git</connection>
+		<developerConnection>scm:git:https://github.com/morulay/shiro-aad.git</developerConnection>
+		<url>https://github.com/morulay/shiro-aad/tree/master</url>
+	</scm>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>8</java.version>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<sonar.java.source>${java.version}</sonar.java.source>
 
-		<spring-boot.version>2.2.5.RELEASE</spring-boot.version>
-		<shiro.version>1.5.1</shiro.version>
+		<spring-boot.version>2.2.6.RELEASE</spring-boot.version>
+		<shiro.version>1.5.2</shiro.version>
+		<nimbus.oidc.version>7.3</nimbus.oidc.version>
 	</properties>
 
 	<dependencyManagement>
@@ -47,13 +82,13 @@
 			<version>${shiro.version}</version>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.nimbusds</groupId>
 			<artifactId>oauth2-oidc-sdk</artifactId>
-			<version>7.3</version>
+			<version>${nimbus.oidc.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
@@ -73,4 +108,71 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.coveo</groupId>
+				<artifactId>fmt-maven-plugin</artifactId>
+				<version>2.9</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>ci</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.9.1</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

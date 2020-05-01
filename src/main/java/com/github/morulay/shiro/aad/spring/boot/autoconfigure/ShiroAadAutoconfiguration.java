@@ -25,16 +25,21 @@ import org.springframework.context.annotation.DependsOn;
 @Configuration
 @AutoConfigureBefore(ShiroWebAutoConfiguration.class)
 @EnableConfigurationProperties(ShiroAadProperties.class)
-@ConditionalOnProperty(prefix = "shiro.aad", name = {"tenant", "tenant-id", "client-id"})
+@ConditionalOnProperty(
+    prefix = "shiro.aad",
+    name = {"tenant", "tenant-id", "client-id"})
 public class ShiroAadAutoconfiguration {
 
-  @Autowired
-  private ShiroAadProperties aadProperties;
+  @Autowired private ShiroAadProperties aadProperties;
 
   @Bean
   public Filter authcOpenId(SecurityManager securityManager) {
-    return new AadOpenIdAuthenticationFilter(aadProperties.getAuthority(),
-        aadProperties.getTenant(), aadProperties.getRedirectUri(), aadProperties.getClientId(), "");
+    return new AadOpenIdAuthenticationFilter(
+        aadProperties.getAuthority(),
+        aadProperties.getTenant(),
+        aadProperties.getRedirectUri(),
+        aadProperties.getClientId(),
+        "");
   }
 
   @Bean
@@ -59,8 +64,11 @@ public class ShiroAadAutoconfiguration {
   @Bean
   @ConditionalOnBean(PrincipalFactory.class)
   public Authenticator authenticator(PrincipalFactory principalFactory) {
-    return new AadAuthenticationInfoSupplier(aadProperties.getAuthority(),
-        aadProperties.getTenantId(), aadProperties.getClientId(), principalFactory);
+    return new AadAuthenticationInfoSupplier(
+        aadProperties.getAuthority(),
+        aadProperties.getTenantId(),
+        aadProperties.getClientId(),
+        principalFactory);
   }
 
   @Bean
