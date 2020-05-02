@@ -1,3 +1,6 @@
+[![CI Build](https://github.com/morulay/shiro-aad/workflows/CI%20Build/badge.svg))](https://github.com/morulay/shiro-aad/actions?query=workflow%3A%22CI+Build%22)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=morulay_shiro-aad&metric=alert_status)](https://sonarcloud.io/dashboard?id=morulay_shiro-aad)
+
 # shiro-azure
 
 Light integration of Apache Shiro with Microsoft Azure Active Direcory based on [Microsoft identity platfoprm ID tokens](https://docs.microsoft.com/en-us/azure/active-directory/develop/id-tokens) and inspired by Microsoft's example of [a Java Web application that signs in users with the Microsoft identity platform and calls Microsoft Graph](https://github.com/Azure-Samples/ms-identity-java-webapp/tree/master/msal-java-webapp-sample) and [Azure Spring Boot](https://github.com/microsoft/azure-spring-boot) starter.
