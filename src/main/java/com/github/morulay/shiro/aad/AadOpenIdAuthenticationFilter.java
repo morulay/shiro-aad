@@ -1,7 +1,6 @@
 package com.github.morulay.shiro.aad;
 
 import static java.lang.String.format;
-import static java.util.Map.entry;
 
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
@@ -11,6 +10,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -198,15 +198,14 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     nonceCookie.setSameSite(SameSiteOptions.NONE);
     nonceCookie.saveTo(httpRequest, httpResponse);
 
-    Map<String, String> params =
-        Map.ofEntries(
-            entry("response_type", ID_TOKEN_PARAM),
-            entry("response_mode", "form_post"),
-            entry("redirect_uri", toAbsoluteUri(httpRequest, getLoginUrl())),
-            entry("client_id", clientId),
-            entry("scope", "openid offline_access profile"),
-            entry(STATE_PARAM, state),
-            entry(NONCE_PARAM, nonce));
+    Map<String, String> params = new HashMap<>();
+    params.put("response_type", ID_TOKEN_PARAM);
+    params.put("response_mode", "form_post");
+    params.put("redirect_uri", toAbsoluteUri(httpRequest, getLoginUrl()));
+    params.put("client_id", clientId);
+    params.put("scope", "openid offline_access profile");
+    params.put(STATE_PARAM, state);
+    params.put(NONCE_PARAM, nonce);
     WebUtils.issueRedirect(
         request, response, format("%s/%s/oauth2/v2.0/authorize", authority, tenant), params);
   }
