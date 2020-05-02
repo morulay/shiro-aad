@@ -18,16 +18,18 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.Authenticator;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class AadAuthenticationInfoSupplier implements Authenticator {
+
+  private static final Logger log = LoggerFactory.getLogger(AadAuthenticationInfoSupplier.class);
 
   private String authority;
   private String tenantId;
