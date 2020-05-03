@@ -27,16 +27,16 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AadAuthenticationInfoSupplier implements Authenticator {
+public class AadAuthenticator implements Authenticator {
 
-  private static final Logger log = LoggerFactory.getLogger(AadAuthenticationInfoSupplier.class);
+  private static final Logger log = LoggerFactory.getLogger(AadAuthenticator.class);
 
   private String authority;
   private String tenantId;
   private String clientId;
   private PrincipalFactory principalFactory;
 
-  public AadAuthenticationInfoSupplier(
+  public AadAuthenticator(
       String authority, String tenantId, String clientId, PrincipalFactory principalFactory) {
     this.authority = authority;
     this.tenantId = tenantId;
@@ -68,13 +68,14 @@ public class AadAuthenticationInfoSupplier implements Authenticator {
     }
 
     SimplePrincipalCollection principals = new SimplePrincipalCollection();
-    principals.add(username, "Azure Active Directory realm");
-    principals.add(idToken, "Azure Active Directory realm");
-    principals.add(principalFactory.createPrincipal(username), "Application realm");
+    if (principalFactory != null) {
+      principals.add(principalFactory.createPrincipal(username), "Application realm");
+    }
+
+    principals.add(username, "Azure AD realm");
+    principals.add(idToken, "Azure AD realm");
     return new SimpleAuthenticationInfo(
-        principalFactory.createPrincipal(username),
-        token.getCredentials(),
-        "Azure Active Directory realm");
+        principals, token.getCredentials(), "Azure Active Directory realm");
   }
 
   private boolean supports(AuthenticationToken token) {

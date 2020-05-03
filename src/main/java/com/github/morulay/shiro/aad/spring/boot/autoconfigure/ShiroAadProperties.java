@@ -1,14 +1,48 @@
 package com.github.morulay.shiro.aad.spring.boot.autoconfigure;
 
+import javax.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+/** Configuration properties for Shiro integration with Azure AD */
+@Validated
 @ConfigurationProperties(prefix = "shiro.aad")
 public class ShiroAadProperties {
-  private String tenant;
-  private String tenantId;
+
+  /** Whether to enable Azure AD integration */
+  private boolean enabled = true;
+
+  /** Name of the tenant */
+  @NotBlank private String tenant;
+
+  /** Tenant ID of the tenant */
+  @NotBlank private String tenantId;
+
+  /**
+   * Microsoft authority instance base URL. Default value is {@code
+   * https://login.microsoftonline.com}
+   */
   private String authority = "https://login.microsoftonline.com";
-  private String clientId;
+
+  /**
+   * Unique application (client) ID assigned to your application by Azure AD when the application
+   * was registered
+   */
+  @NotBlank private String clientId;
+
+  /** Secret (password) provided by the application registration portal */
+  private String clientSecret;
+
+  /** URI where the identity provider will send the security tokens back to */
   private String redirectUri = "/";
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
 
   public String getTenant() {
     return tenant;
@@ -48,5 +82,13 @@ public class ShiroAadProperties {
 
   public void setRedirectUri(String redirectUri) {
     this.redirectUri = redirectUri;
+  }
+
+  public String getClientSecret() {
+    return clientSecret;
+  }
+
+  public void setClientSecret(String clientSecret) {
+    this.clientSecret = clientSecret;
   }
 }
