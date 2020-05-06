@@ -36,6 +36,9 @@ public class ShiroAadProperties {
   /** URI where the identity provider will send the security tokens back to */
   private String redirectUri = "/";
 
+  /** URI that the user is redirected to after successfully signing out */
+  private String postLogoutUri;
+
   public boolean isEnabled() {
     return enabled;
   }
@@ -90,5 +93,13 @@ public class ShiroAadProperties {
 
   public void setClientSecret(String clientSecret) {
     this.clientSecret = clientSecret;
+  }
+
+  public String getPostLogoutUri() {
+    return postLogoutUri;
+  }
+
+  public void setPostLogoutUri(String postLogoutUri) {
+    this.postLogoutUri = postLogoutUri;
   }
 }

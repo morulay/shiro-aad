@@ -18,16 +18,19 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.Authenticator;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.LogoutAware;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
-import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AadAuthenticator implements Authenticator {
+public class AadAuthenticator implements Authenticator, LogoutAware {
+
+  private static final String CLAIM_PREFERRED_USERNAME = "preferred_username";
 
   private static final Logger log = LoggerFactory.getLogger(AadAuthenticator.class);
 
@@ -47,7 +50,8 @@ public class AadAuthenticator implements Authenticator {
   @Override
   public AuthenticationInfo authenticate(AuthenticationToken token) {
     if (!supports(token)) {
-      throw new AuthenticationException("Not supported token");
+      log.warn("Not supported token [{}]", token.getClass());
+      throw new IncorrectCredentialsException();
     }
 
     OpenIdToken idToken = (OpenIdToken) token;
@@ -55,27 +59,22 @@ public class AadAuthenticator implements Authenticator {
     try {
       claims = validateToken(idToken.getToken());
     } catch (Exception e) {
-      log.warn("Unable to validate OpenID token", e);
-      throw new AuthenticationException("Unable to validate OpenID token");
+      log.warn("Failed to validate OpenID token", e);
+      throw new IncorrectCredentialsException();
     }
 
     String username;
     try {
-      username = claims.getStringClaim("preferred_username");
+      username = claims.getStringClaim(CLAIM_PREFERRED_USERNAME);
     } catch (ParseException e) {
-      log.warn("Unable to get " + "preferred_username", e);
-      throw new AuthenticationException("Unable to validate OpenID token");
+      log.warn("Unable to get " + CLAIM_PREFERRED_USERNAME, e);
+      throw new IncorrectCredentialsException();
     }
 
-    SimplePrincipalCollection principals = new SimplePrincipalCollection();
-    if (principalFactory != null) {
-      principals.add(principalFactory.createPrincipal(username), "Application realm");
-    }
-
-    principals.add(username, "Azure AD realm");
-    principals.add(idToken, "Azure AD realm");
+    Object principal =
+        principalFactory != null ? principalFactory.createPrincipal(username) : username;
     return new SimpleAuthenticationInfo(
-        principals, token.getCredentials(), "Azure Active Directory realm");
+        principal, token.getCredentials(), "Azure Active Directory realm");
   }
 
   private boolean supports(AuthenticationToken token) {
@@ -100,7 +99,13 @@ public class AadAuthenticator implements Authenticator {
                 .audience(clientId)
                 .build(),
             new HashSet<String>(
-                Arrays.asList("sub", "iat", "exp", "nonce", "preferred_username"))));
+                Arrays.asList("sub", "iat", "exp", "nonce", CLAIM_PREFERRED_USERNAME))));
     return jwtProcessor.process(idToken, null);
+  }
+
+  @Override
+  public void onLogout(PrincipalCollection principals) {
+    // TODO Auto-generated method stub
+
   }
 }

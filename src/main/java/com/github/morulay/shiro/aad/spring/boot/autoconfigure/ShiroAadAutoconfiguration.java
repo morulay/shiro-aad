@@ -1,6 +1,7 @@
 package com.github.morulay.shiro.aad.spring.boot.autoconfigure;
 
 import com.github.morulay.shiro.aad.AadAuthenticator;
+import com.github.morulay.shiro.aad.AadLogoutFilter;
 import com.github.morulay.shiro.aad.AadOpenIdAuthenticationFilter;
 import com.github.morulay.shiro.aad.CookieRunAsFilter;
 import com.github.morulay.shiro.aad.PrincipalFactory;
@@ -32,7 +33,7 @@ public class ShiroAadAutoconfiguration {
   @Autowired private ShiroAadProperties aadProperties;
 
   @Bean
-  public Filter authcOpenId(SecurityManager securityManager) {
+  public Filter authcOpenId() {
     return new AadOpenIdAuthenticationFilter(
         aadProperties.getAuthority(),
         aadProperties.getTenant(),
@@ -42,15 +43,22 @@ public class ShiroAadAutoconfiguration {
   }
 
   @Bean
-  public Filter cookieRunAs(SecurityManager securityManager) {
+  public Filter cookieRunAs() {
     return new CookieRunAsFilter();
   }
 
   @Bean
-  @DependsOn({"authcOpenId", "cookieRunAs"})
+  public Filter logout() {
+    return new AadLogoutFilter(
+        aadProperties.getAuthority(), aadProperties.getTenant(), aadProperties.getPostLogoutUri());
+  }
+
+  @Bean
+  @DependsOn({"authcOpenId", "cookieRunAs", "logout"})
   @ConditionalOnMissingBean
   public ShiroFilterChainDefinition shiroFilterChainDefinition() {
     DefaultShiroFilterChainDefinition chainDefinition = new DefaultShiroFilterChainDefinition();
+    chainDefinition.addPathDefinition("/logout", "logout");
     chainDefinition.addPathDefinition("/**", "authcOpenId, cookieRunAs");
     return chainDefinition;
   }

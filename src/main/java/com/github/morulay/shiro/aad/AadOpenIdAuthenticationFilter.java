@@ -48,6 +48,14 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private String tenant;
   private String clientId;
 
+  /**
+   * @param authority the Microsoft authority instance base URI, e.g. {@code
+   *     https://login.microsoftonline.com}
+   * @param tenant the name of the tenant
+   * @param redirectUri
+   * @param clientId
+   * @param unauthorizedUrl
+   */
   public AadOpenIdAuthenticationFilter(
       String authority,
       String tenant,
