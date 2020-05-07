@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -38,13 +39,22 @@ public class ShiroAadAutoconfiguration {
         aadProperties.getAuthority(),
         aadProperties.getTenant(),
         aadProperties.getRedirectUri(),
-        aadProperties.getClientId(),
-        "");
+        aadProperties.getClientId());
+  }
+
+  @Bean
+  public FilterRegistrationBean<Filter> authcOpenIdRegistration() {
+    return disableFilterRegistration(authcOpenId());
   }
 
   @Bean
   public Filter cookieRunAs() {
     return new CookieRunAsFilter();
+  }
+
+  @Bean
+  public FilterRegistrationBean<Filter> cookieRunAsRegistration() {
+    return disableFilterRegistration(cookieRunAs());
   }
 
   @Bean
@@ -54,10 +64,35 @@ public class ShiroAadAutoconfiguration {
   }
 
   @Bean
+  public FilterRegistrationBean<Filter> logoutRegistration() {
+    return disableFilterRegistration(logout());
+  }
+
+  /**
+   * Returns {@link FilterRegistrationBean} for the given filter with {@link
+   * FilterRegistrationBean#setEnabled(boolean)} set to {@code false} in order to prevent the
+   * mapping of the filter in the context root that, the default behavior of Spring
+   *
+   * @param filter the filter to disable the mapping
+   * @return {@link FilterRegistrationBean} for the given filter with {@link
+   *     FilterRegistrationBean#setEnabled(boolean)} set to {@code false}
+   */
+  private static FilterRegistrationBean<Filter> disableFilterRegistration(Filter filter) {
+    FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
+    registration.setFilter(filter);
+    registration.setEnabled(false);
+    return registration;
+  }
+
+  @Bean
   @DependsOn({"authcOpenId", "cookieRunAs", "logout"})
   @ConditionalOnMissingBean
   public ShiroFilterChainDefinition shiroFilterChainDefinition() {
     DefaultShiroFilterChainDefinition chainDefinition = new DefaultShiroFilterChainDefinition();
+    if (aadProperties.getPostLogoutUri() != null) {
+      chainDefinition.addPathDefinition(aadProperties.getPostLogoutUri(), "anon");
+    }
+
     chainDefinition.addPathDefinition("/logout", "logout");
     chainDefinition.addPathDefinition("/**", "authcOpenId, cookieRunAs");
     return chainDefinition;

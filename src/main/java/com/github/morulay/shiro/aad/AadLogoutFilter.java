@@ -1,19 +1,22 @@
 package com.github.morulay.shiro.aad;
 
+import static com.github.morulay.shiro.aad.AadOpenIdAuthenticationFilter.ID_TOKEN_COOKIE_TEMPLATE;
+import static com.github.morulay.shiro.aad.AadUtils.toAbsoluteUri;
 import static java.lang.String.format;
-
+import static org.apache.shiro.web.util.WebUtils.toHttp;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.session.SessionException;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.apache.shiro.web.servlet.Cookie;
+import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.util.WebUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * In addition to executing {@link Subject#logout()} makes <a
@@ -21,9 +24,8 @@ import org.slf4j.LoggerFactory;
  * sign-out from Microsoft Identity Platform</a> redirecting at the end to post logout URI if
  * provided.
  */
+@SuppressWarnings("java:S110")
 public class AadLogoutFilter extends PathMatchingFilter {
-
-  private static final Logger log = LoggerFactory.getLogger(AadLogoutFilter.class);
 
   private String authority;
   private String tenant;
@@ -45,29 +47,47 @@ public class AadLogoutFilter extends PathMatchingFilter {
   }
 
   @Override
-  protected boolean preHandle(ServletRequest request, ServletResponse response) throws IOException {
+  protected boolean onPreHandle(
+      ServletRequest request, ServletResponse response, Object mappedValue) throws IOException {
     Subject subject = SecurityUtils.getSubject();
-    try {
-      subject.logout();
-    } catch (SessionException ise) {
-      log.debug(
-          "Encountered session exception during logout. This can generally safely be ignored.",
-          ise);
-    }
+    subject.logout();
 
-    issueRedirect(request, response);
+    HttpServletRequest httpRequest = toHttp(request);
+    HttpServletResponse httpResponse = toHttp(response);
+
+    removeOpenIdCookie(httpRequest, httpResponse);
+    removeRunAsCookie(httpRequest, httpResponse);
+
+    issueRedirect(httpRequest, httpResponse);
     return false;
   }
 
-  protected void issueRedirect(ServletRequest request, ServletResponse response)
+  private void removeOpenIdCookie(
+      HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    String value = ID_TOKEN_COOKIE_TEMPLATE.readValue(httpRequest, httpResponse);
+    if (value != null) {
+      ID_TOKEN_COOKIE_TEMPLATE.removeFrom(httpRequest, httpResponse);
+    }
+  }
+
+  private void removeRunAsCookie(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    Cookie runAsCookie = new SimpleCookie(CookieRunAsFilter.RUN_AS_COOKIE_NAME);
+    String value = runAsCookie.readValue(httpRequest, httpResponse);
+    if (value != null) {
+      runAsCookie.removeFrom(httpRequest, httpResponse);
+    }
+  }
+
+  protected void issueRedirect(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     String redirectUri = format("%s/%s/oauth2/v2.0/logout", authority, tenant);
     if (postLogoutUri == null) {
       WebUtils.issueRedirect(request, response, redirectUri);
+      return;
     }
 
     Map<String, String> params = new HashMap<>();
-    params.put("post_logout_redirect_uri", postLogoutUri);
+    params.put("post_logout_redirect_uri", toAbsoluteUri(request, postLogoutUri));
     WebUtils.issueRedirect(request, response, redirectUri, params);
   }
 }

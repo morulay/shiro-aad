@@ -1,7 +1,8 @@
 package com.github.morulay.shiro.aad;
 
+import static com.github.morulay.shiro.aad.AadUtils.toAbsoluteUri;
 import static java.lang.String.format;
-
+import static org.apache.shiro.web.util.WebUtils.toHttp;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -30,6 +31,20 @@ import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Requires the requesting user to be {@link org.apache.shiro.subject.Subject#isAuthenticated()
+ * authenticated} for the request to continue, and if they're not, requires the user to login via
+ * Azure Active Directory. Upon successful login, they're allowed to continue on to the requested
+ * resource/url.
+ *
+ * <p>This implementation is based on <a
+ * href="https://docs.microsoft.com/en-us/azure/active-directory/develop/id-tokens">Microsoft
+ * identity platform ID tokens</a> and inspired by Microsoft's example of <a
+ * href="https://github.com/Azure-Samples/ms-identity-java-webapp/tree/master/msal-java-webapp-sample">Java
+ * Web application that signs in users with the Microsoft identity platform and calls Microsoft
+ * Graph</a> and <a href="https://github.com/microsoft/azure-spring-boot">Azure Spring Boot</a>
+ * starter.
+ */
 public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
 
   private static final String AUTH_ERROR_PARAM = "error";
@@ -38,7 +53,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private static final String STATE_PARAM = "state";
   private static final String NONCE_PARAM = "nonce";
 
-  private static final SimpleCookie ID_TOKEN_COOKIE_TEMPLATE = new SimpleCookie(ID_TOKEN_PARAM);
+  static final SimpleCookie ID_TOKEN_COOKIE_TEMPLATE = new SimpleCookie(ID_TOKEN_PARAM);
   private static final SimpleCookie STATE_COOKIE_TEMPLATE = new SimpleCookie(STATE_PARAM);
   private static final SimpleCookie NONCE_COOKIE_TEMPLATE = new SimpleCookie(NONCE_PARAM);
 
@@ -52,16 +67,12 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
    * @param authority the Microsoft authority instance base URI, e.g. {@code
    *     https://login.microsoftonline.com}
    * @param tenant the name of the tenant
-   * @param redirectUri
-   * @param clientId
-   * @param unauthorizedUrl
+   * @param redirectUri the URI where the identity provider will send the security tokens back to
+   * @param clientId the ID assigned to your application by Azure AD when the application was
+   *     registered
    */
   public AadOpenIdAuthenticationFilter(
-      String authority,
-      String tenant,
-      String redirectUri,
-      String clientId,
-      String unauthorizedUrl) {
+      String authority, String tenant, String redirectUri, String clientId) {
     this.authority = authority;
     this.tenant = tenant;
     setLoginUrl(redirectUri);
@@ -93,7 +104,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
 
   @Override
   protected boolean isLoginRequest(ServletRequest request, ServletResponse response) {
-    HttpServletRequest httpRequest = WebUtils.toHttp(request);
+    HttpServletRequest httpRequest = toHttp(request);
     Map<String, String[]> httpParameters = httpRequest.getParameterMap();
 
     boolean isPost = httpRequest.getMethod().equalsIgnoreCase("POST");
@@ -191,8 +202,8 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   @Override
   protected void redirectToLogin(ServletRequest request, ServletResponse response)
       throws IOException {
-    HttpServletRequest httpRequest = WebUtils.toHttp(request);
-    HttpServletResponse httpResponse = WebUtils.toHttp(response);
+    HttpServletRequest httpRequest = toHttp(request);
+    HttpServletResponse httpResponse = toHttp(response);
 
     String state = saveCurrentRequest(httpRequest);
     Cookie stateCookie = new SimpleCookie(STATE_COOKIE_TEMPLATE);
@@ -229,23 +240,6 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     return urlBuf.toString();
   }
 
-  /**
-   * Turns the given path to an absolute URI taking into account the context path
-   *
-   * @param request the current HTTP request
-   * @param path a context path relative path
-   * @return an absolute URI taking into account the context path
-   */
-  public static String toAbsoluteUri(HttpServletRequest request, String path) {
-    String reqPath = request.getRequestURI();
-    StringBuffer urlBuf = request.getRequestURL();
-    urlBuf.setLength(urlBuf.length() - reqPath.length());
-    urlBuf.append(request.getContextPath());
-    urlBuf.append(path.length() == 0 || path.startsWith("/") ? "" : "/");
-    urlBuf.append(path);
-    return urlBuf.toString();
-  }
-
   @Override
   protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -260,8 +254,8 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       ServletRequest request,
       ServletResponse response) {
 
-    HttpServletRequest httpRequest = WebUtils.toHttp(request);
-    HttpServletResponse httpResponse = WebUtils.toHttp(response);
+    HttpServletRequest httpRequest = toHttp(request);
+    HttpServletResponse httpResponse = toHttp(response);
 
     ID_TOKEN_COOKIE_TEMPLATE.removeFrom(httpRequest, httpResponse);
     return false;

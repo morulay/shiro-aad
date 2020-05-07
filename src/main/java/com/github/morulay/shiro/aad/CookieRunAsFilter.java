@@ -1,5 +1,6 @@
 package com.github.morulay.shiro.aad;
 
+import static org.apache.shiro.web.util.WebUtils.toHttp;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +19,6 @@ import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.servlet.Cookie;
 import org.apache.shiro.web.servlet.Cookie.SameSiteOptions;
 import org.apache.shiro.web.servlet.SimpleCookie;
-import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   private byte[] decryptionCipherKey;
 
   /** The default name of the underlying rememberMe cookie which is {@code rememberMe}. */
-  public static final String RUN_AS_COOKIE_NAME = "runas_token";
+  static final String RUN_AS_COOKIE_NAME = "ra_token";
 
   private Cookie runAsCookieTemplate;
 
@@ -345,8 +345,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   protected boolean onPreHandle(
       ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
 
-    HttpServletRequest httpRequest = WebUtils.toHttp(request);
-    HttpServletResponse httpResponse = WebUtils.toHttp(response);
+    HttpServletRequest httpRequest = toHttp(request);
+    HttpServletResponse httpResponse = toHttp(response);
 
     if (!isRunAs(httpRequest, httpResponse)) {
       return true;
@@ -367,8 +367,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   public void afterCompletion(ServletRequest request, ServletResponse response, Exception exception)
       throws Exception {
 
-    HttpServletRequest httpRequest = WebUtils.toHttp(request);
-    HttpServletResponse httpResponse = WebUtils.toHttp(response);
+    HttpServletRequest httpRequest = toHttp(request);
+    HttpServletResponse httpResponse = toHttp(response);
 
     Subject subject = SecurityUtils.getSubject();
     if (subject.isAuthenticated() && subject.isRunAs()) {
@@ -379,8 +379,8 @@ public class CookieRunAsFilter extends PathMatchingFilter {
   }
 
   /**
-   * Sometimes a user agent will send the rememberMe cookie value without padding, most likely
-   * because {@code =} is a separator in the cookie header.
+   * Sometimes a user agent will send the run as cookie value without padding, most likely because
+   * {@code =} is a separator in the cookie header.
    *
    * <p>Contributed by Luis Arias. Thanks Luis!
    *

@@ -51,7 +51,7 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
 		<spring-boot.version>2.2.6.RELEASE</spring-boot.version>
-		<shiro.version>1.5.2</shiro.version>
+		<shiro.version>1.5.3</shiro.version>
 		<nimbus.oidc.version>7.3</nimbus.oidc.version>
 	</properties>
 
