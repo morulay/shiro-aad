@@ -1,10 +1,13 @@
 package com.github.morulay.shiro.session;
 
+import static org.apache.shiro.web.util.WebUtils.getHttpRequest;
+import static org.apache.shiro.web.util.WebUtils.getHttpResponse;
+import static org.apache.shiro.web.util.WebUtils.getRequest;
+import static org.apache.shiro.web.util.WebUtils.isHttp;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.shiro.authz.AuthorizationException;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.session.Session;
-import org.apache.shiro.session.SessionException;
 import org.apache.shiro.session.mgt.SessionContext;
 import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.web.session.mgt.WebSessionManager;
@@ -23,50 +26,58 @@ import org.apache.shiro.web.util.WebUtils;
  * functional in a servlet container - it is not capable of supporting Sessions for any clients
  * other than those using the HTTP protocol.
  */
-public class HttpRequestSessionManager implements WebSessionManager {
+public class CookieRunAsSessionManager implements WebSessionManager {
 
-  public HttpRequestSessionManager() {}
+  private CookieRunAsManager cookieRunAsManager;
+
+  public CookieRunAsSessionManager(CookieRunAsManager cookieRunAsManager) {
+    this.cookieRunAsManager = cookieRunAsManager;
+  }
 
   @Override
-  public Session start(SessionContext context) throws AuthorizationException {
+  public Session start(SessionContext context) {
     return createSession(context);
   }
 
   @Override
-  public Session getSession(SessionKey key) throws SessionException {
+  public Session getSession(SessionKey key) {
     if (!WebUtils.isHttp(key)) {
       String msg = "SessionKey must be an HTTP compatible implementation.";
       throw new IllegalArgumentException(msg);
     }
 
-    HttpServletRequest request = WebUtils.getHttpRequest(key);
-    return createSession(request, request.getRemoteHost());
+    HttpServletRequest request = getHttpRequest(key);
+    HttpServletResponse response = getHttpResponse(key);
+    return createSession(request, response, request.getRemoteHost());
+  }
+
+  protected Session createSession(
+      HttpServletRequest request, HttpServletResponse response, String host) {
+    return new CookieRunAsSession(request, response, host, cookieRunAsManager);
+  }
+
+  protected Session createSession(SessionContext sessionContext) {
+    if (!isHttp(sessionContext)) {
+      String msg = "SessionContext must be an HTTP compatible implementation.";
+      throw new IllegalArgumentException(msg);
+    }
+
+    HttpServletRequest request = getHttpRequest(sessionContext);
+    HttpServletResponse response = getHttpResponse(sessionContext);
+    String host = getHost(sessionContext);
+    return createSession(request, response, host);
   }
 
   private String getHost(SessionContext context) {
     String host = context.getHost();
     if (host == null) {
-      ServletRequest request = WebUtils.getRequest(context);
+      ServletRequest request = getRequest(context);
       if (request != null) {
         host = request.getRemoteHost();
       }
     }
+
     return host;
-  }
-
-  protected Session createSession(SessionContext sessionContext) throws AuthorizationException {
-    if (!WebUtils.isHttp(sessionContext)) {
-      String msg = "SessionContext must be an HTTP compatible implementation.";
-      throw new IllegalArgumentException(msg);
-    }
-
-    HttpServletRequest request = WebUtils.getHttpRequest(sessionContext);
-    String host = getHost(sessionContext);
-    return createSession(request, host);
-  }
-
-  protected Session createSession(HttpServletRequest request, String host) {
-    return new HttpRequestSession(request, host);
   }
 
   /**

@@ -3,9 +3,9 @@ package com.github.morulay.shiro.aad.spring.boot.autoconfigure;
 import com.github.morulay.shiro.aad.AadAuthenticator;
 import com.github.morulay.shiro.aad.AadLogoutFilter;
 import com.github.morulay.shiro.aad.AadOpenIdAuthenticationFilter;
-import com.github.morulay.shiro.aad.CookieRunAsFilter;
 import com.github.morulay.shiro.aad.PrincipalFactory;
-import com.github.morulay.shiro.session.HttpRequestSessionManager;
+import com.github.morulay.shiro.session.CookieRunAsManager;
+import com.github.morulay.shiro.session.CookieRunAsSessionManager;
 import javax.annotation.PostConstruct;
 import javax.servlet.Filter;
 import org.apache.shiro.authc.Authenticator;
@@ -48,16 +48,6 @@ public class ShiroAadAutoconfiguration {
   }
 
   @Bean
-  public Filter cookieRunAs() {
-    return new CookieRunAsFilter();
-  }
-
-  @Bean
-  public FilterRegistrationBean<Filter> cookieRunAsRegistration() {
-    return disableFilterRegistration(cookieRunAs());
-  }
-
-  @Bean
   public Filter logout() {
     return new AadLogoutFilter(
         aadProperties.getAuthority(), aadProperties.getTenant(), aadProperties.getPostLogoutUri());
@@ -85,7 +75,7 @@ public class ShiroAadAutoconfiguration {
   }
 
   @Bean
-  @DependsOn({"authcOpenId", "cookieRunAs", "logout"})
+  @DependsOn({"authcOpenId", "logout"})
   @ConditionalOnMissingBean
   public ShiroFilterChainDefinition shiroFilterChainDefinition() {
     DefaultShiroFilterChainDefinition chainDefinition = new DefaultShiroFilterChainDefinition();
@@ -94,7 +84,7 @@ public class ShiroAadAutoconfiguration {
     }
 
     chainDefinition.addPathDefinition("/logout", "logout");
-    chainDefinition.addPathDefinition("/**", "authcOpenId, cookieRunAs");
+    chainDefinition.addPathDefinition("/**", "authcOpenId");
     return chainDefinition;
   }
 
@@ -109,8 +99,13 @@ public class ShiroAadAutoconfiguration {
   }
 
   @Bean
-  public WebSessionManager sessionManager() {
-    return new HttpRequestSessionManager();
+  CookieRunAsManager cookieRunAsManager() {
+    return new CookieRunAsManager();
+  }
+
+  @Bean
+  public WebSessionManager sessionManager(CookieRunAsManager cookieRunAsManager) {
+    return new CookieRunAsSessionManager(cookieRunAsManager);
   }
 
   @Configuration

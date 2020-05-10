@@ -14,8 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.PathMatchingFilter;
-import org.apache.shiro.web.servlet.Cookie;
-import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.util.WebUtils;
 
 /**
@@ -24,7 +22,6 @@ import org.apache.shiro.web.util.WebUtils;
  * sign-out from Microsoft Identity Platform</a> redirecting at the end to post logout URI if
  * provided.
  */
-@SuppressWarnings("java:S110")
 public class AadLogoutFilter extends PathMatchingFilter {
 
   private String authority;
@@ -54,10 +51,7 @@ public class AadLogoutFilter extends PathMatchingFilter {
 
     HttpServletRequest httpRequest = toHttp(request);
     HttpServletResponse httpResponse = toHttp(response);
-
     removeOpenIdCookie(httpRequest, httpResponse);
-    removeRunAsCookie(httpRequest, httpResponse);
-
     issueRedirect(httpRequest, httpResponse);
     return false;
   }
@@ -67,14 +61,6 @@ public class AadLogoutFilter extends PathMatchingFilter {
     String value = ID_TOKEN_COOKIE_TEMPLATE.readValue(httpRequest, httpResponse);
     if (value != null) {
       ID_TOKEN_COOKIE_TEMPLATE.removeFrom(httpRequest, httpResponse);
-    }
-  }
-
-  private void removeRunAsCookie(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-    Cookie runAsCookie = new SimpleCookie(CookieRunAsFilter.RUN_AS_COOKIE_NAME);
-    String value = runAsCookie.readValue(httpRequest, httpResponse);
-    if (value != null) {
-      runAsCookie.removeFrom(httpRequest, httpResponse);
     }
   }
 
