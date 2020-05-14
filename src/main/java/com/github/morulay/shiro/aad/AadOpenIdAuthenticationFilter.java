@@ -217,7 +217,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
 
   private void sendChallengeOrRedirectToLogin(
       HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
-    if (noRedirectMimes != null || noRedirectMimes.size() > 0) {
+    if (noRedirectMimes != null && noRedirectMimes.size() > 0) {
       Enumeration<String> accepts = httpRequest.getHeaders("Accept");
       while (accepts.hasMoreElements()) {
         String mime = accepts.nextElement().toLowerCase();
