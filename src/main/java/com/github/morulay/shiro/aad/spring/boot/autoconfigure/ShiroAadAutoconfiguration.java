@@ -39,7 +39,9 @@ public class ShiroAadAutoconfiguration {
         aadProperties.getAuthority(),
         aadProperties.getTenant(),
         aadProperties.getRedirectUri(),
-        aadProperties.getClientId());
+        aadProperties.getClientId(),
+        aadProperties.getRealmName(),
+        aadProperties.getNoRedirectMimes());
   }
 
   @Bean
@@ -95,6 +97,7 @@ public class ShiroAadAutoconfiguration {
         aadProperties.getAuthority(),
         aadProperties.getTenantId(),
         aadProperties.getClientId(),
+        aadProperties.getRealmName(),
         principalFactory);
   }
 

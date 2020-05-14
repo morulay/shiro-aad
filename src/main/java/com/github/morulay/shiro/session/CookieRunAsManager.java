@@ -2,6 +2,7 @@ package com.github.morulay.shiro.session;
 
 import static org.apache.shiro.web.servlet.Cookie.ONE_YEAR;
 import static org.apache.shiro.web.servlet.Cookie.SameSiteOptions.STRICT;
+
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

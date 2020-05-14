@@ -4,6 +4,7 @@ import static org.apache.shiro.web.util.WebUtils.getHttpRequest;
 import static org.apache.shiro.web.util.WebUtils.getHttpResponse;
 import static org.apache.shiro.web.util.WebUtils.getRequest;
 import static org.apache.shiro.web.util.WebUtils.isHttp;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

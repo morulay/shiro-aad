@@ -3,6 +3,7 @@ package com.github.morulay.shiro.aad;
 import static com.github.morulay.shiro.aad.AadUtils.toAbsoluteUri;
 import static java.lang.String.format;
 import static org.apache.shiro.web.util.WebUtils.toHttp;
+
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -11,9 +12,11 @@ import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -62,6 +65,8 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private String authority;
   private String tenant;
   private String clientId;
+  private String realmName;
+  private Set<String> noRedirectMimes;
 
   /**
    * @param authority the Microsoft authority instance base URI, e.g. {@code
@@ -70,13 +75,24 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
    * @param redirectUri the URI where the identity provider will send the security tokens back to
    * @param clientId the ID assigned to your application by Azure AD when the application was
    *     registered
+   * @param realmName the authorization realm name
+   * @param noRedirectMimes the {@link Set} of MIME types for which the filter will return {@code
+   *     401 Unauthorized} instead to redirect using {@code 302 Found} to authorization endpoint of
+   *     identity provider. Default is {@code application/json}
    */
   public AadOpenIdAuthenticationFilter(
-      String authority, String tenant, String redirectUri, String clientId) {
+      String authority,
+      String tenant,
+      String redirectUri,
+      String clientId,
+      String realmName,
+      Set<String> noRedirectMimes) {
     this.authority = authority;
     this.tenant = tenant;
     setLoginUrl(redirectUri);
     this.clientId = clientId;
+    this.realmName = realmName;
+    this.noRedirectMimes = noRedirectMimes;
   }
 
   @Override
@@ -94,7 +110,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       return false;
     }
 
-    redirectToLogin(httpRequest, httpResponse);
+    sendChallengeOrRedirectToLogin(httpRequest, httpResponse);
     return false;
   }
 
@@ -197,6 +213,28 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       throws IOException {
     String savedUri = request.getParameter(STATE_PARAM);
     WebUtils.issueRedirect(request, response, savedUri);
+  }
+
+  private void sendChallengeOrRedirectToLogin(
+      HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
+    if (noRedirectMimes != null || noRedirectMimes.size() > 0) {
+      Enumeration<String> accepts = httpRequest.getHeaders("Accept");
+      while (accepts.hasMoreElements()) {
+        String mime = accepts.nextElement().toLowerCase();
+        if (noRedirectMimes.contains(mime)) {
+          sendChallenge(httpRequest, httpResponse);
+          return;
+        }
+      }
+    }
+
+    redirectToLogin(httpRequest, httpResponse);
+  }
+
+  private void sendChallenge(HttpServletRequest ignore, HttpServletResponse response) {
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    String authcHeader = format("Bearer realm=\"%s\"", realmName);
+    response.setHeader("WWW-Authenticate", authcHeader);
   }
 
   @Override

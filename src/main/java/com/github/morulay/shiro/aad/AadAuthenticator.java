@@ -37,13 +37,29 @@ public class AadAuthenticator implements Authenticator, LogoutAware {
   private String authority;
   private String tenantId;
   private String clientId;
+  private String realmName;
   private PrincipalFactory principalFactory;
 
+  /**
+   * @param authority the Microsoft authority instance base URI, e.g. {@code
+   *     https://login.microsoftonline.com}
+   * @param tenantId the ID of the tenant
+   * @param clientId the ID assigned to your application by Azure AD when the application was
+   *     registered
+   * @param realmName the authorization realm name
+   * @param principalFactory optional {@link PrincipalFactory} instance to take control on primary
+   *     principal creation
+   */
   public AadAuthenticator(
-      String authority, String tenantId, String clientId, PrincipalFactory principalFactory) {
+      String authority,
+      String tenantId,
+      String clientId,
+      String realmName,
+      PrincipalFactory principalFactory) {
     this.authority = authority;
     this.tenantId = tenantId;
     this.clientId = clientId;
+    this.realmName = realmName;
     this.principalFactory = principalFactory;
   }
 
@@ -73,8 +89,7 @@ public class AadAuthenticator implements Authenticator, LogoutAware {
 
     Object principal =
         principalFactory != null ? principalFactory.createPrincipal(username) : username;
-    return new SimpleAuthenticationInfo(
-        principal, token.getCredentials(), "Azure Active Directory realm");
+    return new SimpleAuthenticationInfo(principal, token.getCredentials(), realmName);
   }
 
   private boolean supports(AuthenticationToken token) {

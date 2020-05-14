@@ -5,7 +5,7 @@
 
 Light integration of Apache Shiro with Microsoft Azure Active Direcory based on [Microsoft identity platfoprm ID tokens](https://docs.microsoft.com/en-us/azure/active-directory/develop/id-tokens) and inspired by Microsoft's example of [a Java Web application that signs in users with the Microsoft identity platform and calls Microsoft Graph](https://github.com/Azure-Samples/ms-identity-java-webapp/tree/master/msal-java-webapp-sample) and [Azure Spring Boot](https://github.com/microsoft/azure-spring-boot) starter.
 
-[Apache Shiro](https://shiro.apache.org) is a powerful and easy-to-use Java security framework with very good intrgation with Spring Boot. It comes with rich set of [Authentication](https://shiro.apache.org/authentication-features.html) and [Authorization](https://shiro.apache.org/authorization-features.html) features, including easy configuration, extendability and pluggable data sources.
+[Apache Shiro](https://shiro.apache.org) is a powerful and easy-to-use Java security framework with first class intrgation with [Spring Boot](https://shiro.apache.org/spring-boot.html). It comes with rich set of [Authentication](https://shiro.apache.org/authentication-features.html) and [Authorization](https://shiro.apache.org/authorization-features.html) features, including easy configuration, extendability and pluggable data sources.
 
 Compared to Spring Security Apache Shiro has one major difference, the default access control model. Spring Securuty authorization is build arround users having one or many roles, where Apache Shiro has users having one or more roles and every role represnts a set of permissions.
 

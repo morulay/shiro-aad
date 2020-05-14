@@ -1,6 +1,7 @@
 package com.github.morulay.shiro.session;
 
 import static org.apache.shiro.util.StringUtils.hasText;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
