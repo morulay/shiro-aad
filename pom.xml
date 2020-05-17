@@ -6,7 +6,7 @@
 
 	<groupId>com.github.morulay</groupId>
 	<artifactId>shiro-aad</artifactId>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2.0</version>
 
 	<name>Shiro AAD</name>
 	<description>Apache Shiro integration with Azure Active Directory</description>
