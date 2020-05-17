@@ -1,5 +1,6 @@
 [![CI Build](https://github.com/morulay/shiro-aad/workflows/CI%20Build/badge.svg)](https://github.com/morulay/shiro-aad/actions?query=workflow%3A%22CI+Build%22)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=morulay_shiro-aad&metric=alert_status)](https://sonarcloud.io/dashboard?id=morulay_shiro-aad)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.morulay/shiro-aad)](https://mvnrepository.com/artifact/com.github.morulay/shiro-aad)
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://github.com/morulay/shiro-aad/blob/master/LICENSE)
 
 # shiro-aad
