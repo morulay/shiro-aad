@@ -2,6 +2,7 @@ package com.github.morulay.shiro.aad;
 
 import static com.github.morulay.shiro.aad.AadOpenIdAuthenticationFilter.ID_TOKEN_COOKIE_TEMPLATE;
 import static com.github.morulay.shiro.aad.AadUtils.toAbsoluteUri;
+import static com.github.morulay.shiro.session.CookieRunAsManager.RUN_AS_COOKIE_TEMPLATE;
 import static java.lang.String.format;
 import static org.apache.shiro.web.util.WebUtils.toHttp;
 
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.servlet.AdviceFilter;
+import org.apache.shiro.web.servlet.Cookie;
 import org.apache.shiro.web.util.WebUtils;
 
 /**
@@ -50,16 +52,17 @@ public class AadLogoutFilter extends AdviceFilter {
 
     HttpServletRequest httpRequest = toHttp(request);
     HttpServletResponse httpResponse = toHttp(response);
-    removeOpenIdCookie(httpRequest, httpResponse);
+    removeCookie(ID_TOKEN_COOKIE_TEMPLATE, httpRequest, httpResponse);
+    removeCookie(RUN_AS_COOKIE_TEMPLATE, httpRequest, httpResponse);
     issueRedirect(httpRequest, httpResponse);
     return false;
   }
 
-  private void removeOpenIdCookie(
-      HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-    String value = ID_TOKEN_COOKIE_TEMPLATE.readValue(httpRequest, httpResponse);
+  private void removeCookie(
+      Cookie cookie, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    String value = cookie.readValue(httpRequest, httpResponse);
     if (value != null) {
-      ID_TOKEN_COOKIE_TEMPLATE.removeFrom(httpRequest, httpResponse);
+      cookie.removeFrom(httpRequest, httpResponse);
     }
   }
 

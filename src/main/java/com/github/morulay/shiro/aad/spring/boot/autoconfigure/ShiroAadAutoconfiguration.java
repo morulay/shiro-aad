@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.Filter;
 import org.apache.shiro.authc.Authenticator;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.mgt.SessionStorageEvaluator;
 import org.apache.shiro.spring.config.web.autoconfigure.ShiroWebAutoConfiguration;
 import org.apache.shiro.spring.web.config.DefaultShiroFilterChainDefinition;
 import org.apache.shiro.spring.web.config.ShiroFilterChainDefinition;
@@ -109,6 +110,11 @@ public class ShiroAadAutoconfiguration {
   @Bean
   public WebSessionManager sessionManager(CookieRunAsManager cookieRunAsManager) {
     return new CookieRunAsSessionManager(cookieRunAsManager);
+  }
+
+  @Bean
+  public SessionStorageEvaluator sessionStorageEvaluator() {
+    return subject -> false;
   }
 
   @Configuration

@@ -132,10 +132,6 @@ public class CookieRunAsSession implements Session {
   @Override
   public Object getAttribute(Object key) {
     Object attribute = httpRequest.getAttribute(assertString(key));
-    return readRunAs(key, attribute);
-  }
-
-  private Object readRunAs(Object key, Object attribute) {
     if (attribute == null
         && RUN_AS_PRINCIPALS_SESSION_KEY.equals(key)
         && cookieRunAsManager.isRunAs(httpRequest, httpResponse)) {
@@ -147,14 +143,15 @@ public class CookieRunAsSession implements Session {
   }
 
   @Override
-  public void setAttribute(Object key, Object value) {
-    httpRequest.setAttribute(assertString(key), value);
-    storeRunAs(key, value);
-  }
-
   @SuppressWarnings("unchecked")
-  private void storeRunAs(Object key, Object value) {
-    if (RUN_AS_PRINCIPALS_SESSION_KEY.equals(key) && value != null) {
+  public void setAttribute(Object key, Object value) {
+    if (value == null) {
+      removeAttribute(key);
+      return;
+    }
+
+    httpRequest.setAttribute(assertString(key), value);
+    if (RUN_AS_PRINCIPALS_SESSION_KEY.equals(key)) {
       cookieRunAsManager.storeRunAs((List<PrincipalCollection>) value, httpRequest, httpResponse);
     }
   }
@@ -164,13 +161,10 @@ public class CookieRunAsSession implements Session {
     String sKey = assertString(key);
     Object removed = httpRequest.getAttribute(sKey);
     httpRequest.removeAttribute(sKey);
-    removeRunAs(key);
-    return removed;
-  }
-
-  private void removeRunAs(Object key) {
-    if (RUN_AS_PRINCIPALS_SESSION_KEY.equals(key)) {
+    if (RUN_AS_PRINCIPALS_SESSION_KEY.equals(key) && removed != null) {
       cookieRunAsManager.removeRunAs(httpRequest, httpResponse);
     }
+
+    return removed;
   }
 }

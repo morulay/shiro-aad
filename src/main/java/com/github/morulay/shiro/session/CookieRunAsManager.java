@@ -49,10 +49,8 @@ public class CookieRunAsManager {
   /** Cipher decryption key to use with the Cipher when decrypting data */
   private byte[] decryptionCipherKey;
 
-  /** The default name of the underlying rememberMe cookie which is {@code rememberMe}. */
-  static final String RUN_AS_COOKIE_NAME = "ra_token";
-
-  private Cookie runAsCookieTemplate;
+  /** The default name of the underlying run as cookie which is {@code ra_token}. */
+  public static final Cookie RUN_AS_COOKIE_TEMPLATE = new SimpleCookie("ra_token");
 
   /**
    * Default constructor that initializes a {@link DefaultSerializer} as the {@link #getSerializer()
@@ -62,11 +60,6 @@ public class CookieRunAsManager {
     this.serializer = new DefaultSerializer<>();
     this.cipherService = new AesCipherService();
     setCipherKey(DEFAULT_CIPHER_KEY_BYTES);
-
-    runAsCookieTemplate = new SimpleCookie(RUN_AS_COOKIE_NAME);
-    runAsCookieTemplate.setHttpOnly(true);
-    runAsCookieTemplate.setMaxAge(ONE_YEAR);
-    runAsCookieTemplate.setSameSite(STRICT);
   }
 
   /**
@@ -307,12 +300,12 @@ public class CookieRunAsManager {
   }
 
   public boolean isRunAs(HttpServletRequest request, HttpServletResponse response) {
-    return runAsCookieTemplate.readValue(request, response) != null;
+    return RUN_AS_COOKIE_TEMPLATE.readValue(request, response) != null;
   }
 
   public List<PrincipalCollection> readRunAs(
       HttpServletRequest request, HttpServletResponse response) {
-    String base64 = runAsCookieTemplate.readValue(request, response);
+    String base64 = RUN_AS_COOKIE_TEMPLATE.readValue(request, response);
     if (base64 == null) {
       return null;
     }
@@ -330,14 +323,17 @@ public class CookieRunAsManager {
       HttpServletResponse response) {
     byte[] bytes = convertPrincipalsToBytes(principals);
     String base64 = Base64.encodeToString(bytes);
-    Cookie runAsCookie = new SimpleCookie(runAsCookieTemplate);
+    Cookie runAsCookie = new SimpleCookie(RUN_AS_COOKIE_TEMPLATE);
+    runAsCookie.setHttpOnly(true);
+    runAsCookie.setMaxAge(ONE_YEAR);
+    runAsCookie.setSameSite(STRICT);
     runAsCookie.setValue(base64);
     runAsCookie.saveTo(request, response);
   }
 
   public void removeRunAs(HttpServletRequest request, HttpServletResponse response) {
-    if (runAsCookieTemplate.readValue(request, response) != null) {
-      runAsCookieTemplate.removeFrom(request, response);
+    if (RUN_AS_COOKIE_TEMPLATE.readValue(request, response) != null) {
+      RUN_AS_COOKIE_TEMPLATE.removeFrom(request, response);
     }
   }
 
