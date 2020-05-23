@@ -25,6 +25,7 @@ import org.apache.shiro.web.util.WebUtils;
  * sign-out from Microsoft Identity Platform</a> redirecting at the end to post logout URI if
  * provided.
  */
+@SuppressWarnings("java:S110") // Parents come from external library
 public class AadLogoutFilter extends AdviceFilter {
 
   private String authority;

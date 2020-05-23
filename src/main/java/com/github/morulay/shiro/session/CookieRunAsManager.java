@@ -252,9 +252,9 @@ public class CookieRunAsManager {
    */
   protected byte[] encrypt(byte[] serialized) {
     byte[] value = serialized;
-    CipherService cipherService = getCipherService();
-    if (cipherService != null) {
-      ByteSource byteSource = cipherService.encrypt(serialized, getEncryptionCipherKey());
+    CipherService cipherSrv = getCipherService();
+    if (cipherSrv != null) {
+      ByteSource byteSource = cipherSrv.encrypt(serialized, getEncryptionCipherKey());
       value = byteSource.getBytes();
     }
     return value;
@@ -269,9 +269,9 @@ public class CookieRunAsManager {
    */
   protected byte[] decrypt(byte[] encrypted) {
     byte[] serialized = encrypted;
-    CipherService cipherService = getCipherService();
-    if (cipherService != null) {
-      ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());
+    CipherService cipherSrv = getCipherService();
+    if (cipherSrv != null) {
+      ByteSource byteSource = cipherSrv.decrypt(encrypted, getDecryptionCipherKey());
       serialized = byteSource.getBytes();
     }
     return serialized;
@@ -303,6 +303,7 @@ public class CookieRunAsManager {
     return RUN_AS_COOKIE_TEMPLATE.readValue(request, response) != null;
   }
 
+  @SuppressWarnings("java:S1168") // Code is prepared for null
   public List<PrincipalCollection> readRunAs(
       HttpServletRequest request, HttpServletResponse response) {
     String base64 = RUN_AS_COOKIE_TEMPLATE.readValue(request, response);

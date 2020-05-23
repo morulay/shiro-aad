@@ -48,8 +48,10 @@ import org.slf4j.LoggerFactory;
  * Graph</a> and <a href="https://github.com/microsoft/azure-spring-boot">Azure Spring Boot</a>
  * starter.
  */
+@SuppressWarnings("java:S110") // Parents come from external library
 public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
 
+  private static final String INVALID_TOKEN_MSG = "Invalid OpenID Connect token";
   private static final String AUTH_ERROR_PARAM = "error";
   private static final String AUTH_CODE_PARAM = "code";
   private static final String ID_TOKEN_PARAM = "id_token";
@@ -134,7 +136,8 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   }
 
   private void processAuthenticationCodeRedirect(
-      HttpServletRequest request, HttpServletResponse response) throws Exception {
+      HttpServletRequest request, HttpServletResponse response)
+      throws IOException, com.nimbusds.oauth2.sdk.ParseException {
 
     validateState(
         STATE_COOKIE_TEMPLATE.readValue(request, response),
@@ -148,7 +151,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
           "Authentication response indicates an error [{}: {}]",
           oidcResponse.getErrorObject().getCode(),
           oidcResponse.getErrorObject().getDescription());
-      throw new AuthenticationException("Invalid OpenID Connect token");
+      throw new AuthenticationException(INVALID_TOKEN_MSG);
     }
 
     AuthenticationSuccessResponse oidcResponse = (AuthenticationSuccessResponse) authResponse;
@@ -160,7 +163,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     redirectToSavedRequest(request, response);
   }
 
-  private void validateState(String stateCookie, String state) throws Exception {
+  private void validateState(String stateCookie, String state) {
     if (!Objects.equals(stateCookie, state)) {
       LOG.warn(
           "Authentication response state [{}] differs from stored one [{}]", state, stateCookie);
@@ -182,13 +185,13 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       nonce = oidcResponse.getIDToken().getJWTClaimsSet().getStringClaim(NONCE_PARAM);
     } catch (ParseException e) {
       LOG.warn("Unable to parse the OpenID Connect token", e);
-      throw new AuthenticationException("Invalid OpenID Connect token");
+      throw new AuthenticationException(INVALID_TOKEN_MSG);
     }
 
     if (!Objects.equals(nonceCookie, nonce)) {
       LOG.warn(
           "Authentication response nonce [{}] differs from stored one [{}]", nonce, nonceCookie);
-      throw new AuthenticationException("Invalid OpenID Connect token");
+      throw new AuthenticationException(INVALID_TOKEN_MSG);
     }
   }
 
@@ -203,7 +206,6 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     Cookie idTokenCookie = new SimpleCookie(ID_TOKEN_COOKIE_TEMPLATE);
     idTokenCookie.setValue(idTokenString);
     idTokenCookie.setHttpOnly(true);
-    // accessTokenCookie.setSecure(true);
     idTokenCookie.setMaxAge(30 * 60);
     idTokenCookie.setPath(request.getContextPath());
     idTokenCookie.saveTo(request, response);
@@ -222,7 +224,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       while (accepts.hasMoreElements()) {
         String mime = accepts.nextElement().toLowerCase();
         if (noRedirectMimes.contains(mime)) {
-          sendChallenge(httpRequest, httpResponse);
+          sendChallenge(httpResponse);
           return;
         }
       }
@@ -231,7 +233,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     redirectToLogin(httpRequest, httpResponse);
   }
 
-  private void sendChallenge(HttpServletRequest ignore, HttpServletResponse response) {
+  private void sendChallenge(HttpServletResponse response) {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     String authcHeader = format("Bearer realm=\"%s\"", realmName);
     response.setHeader("WWW-Authenticate", authcHeader);
