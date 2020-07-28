@@ -247,14 +247,14 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
 
     String state = saveCurrentRequest(httpRequest);
     Cookie stateCookie = new SimpleCookie(STATE_COOKIE_TEMPLATE);
+    markAsCrossSiteCookie(stateCookie, httpRequest.isSecure());
     stateCookie.setValue(state);
-    stateCookie.setSameSite(SameSiteOptions.NONE);
     stateCookie.saveTo(httpRequest, httpResponse);
 
     String nonce = UUID.randomUUID().toString();
     Cookie nonceCookie = new SimpleCookie(NONCE_COOKIE_TEMPLATE);
+    markAsCrossSiteCookie(nonceCookie, httpRequest.isSecure());
     nonceCookie.setValue(nonce);
-    nonceCookie.setSameSite(SameSiteOptions.NONE);
     nonceCookie.saveTo(httpRequest, httpResponse);
 
     Map<String, String> params = new HashMap<>();
@@ -267,6 +267,18 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     params.put(NONCE_PARAM, nonce);
     WebUtils.issueRedirect(
         request, response, format("%s/%s/oauth2/v2.0/authorize", authority, tenant), params);
+  }
+
+  void markAsCrossSiteCookie(Cookie cookie, boolean https) {
+    cookie.setSameSite(SameSiteOptions.NONE);
+    if (https) {
+      cookie.setSecure(true);
+    } else {
+      LOG.warn(
+          "Trying to mark cookie [{}] with SameSite=None on insecure connection. "
+              + "Some browsers may not accept or send such a cookie!",
+          cookie.getName());
+    }
   }
 
   String saveCurrentRequest(HttpServletRequest request) {
