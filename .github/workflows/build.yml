@@ -1,8 +1,8 @@
-name: SonarCloud
+name: Build
 
 on:
   push:
-    branches:
+    branches-ignore:
       - master
   pull_request:
     branches:
@@ -19,8 +19,5 @@ jobs:
         with:
           java-version: "11"
           distribution: "adopt"
-      - name: Analyze with SonarCloud
-        run: mvn -B verify sonar:sonar -Dsonar.login=$SONAR_TOKEN
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Build with Maven
+          run: mvn --batch-mode verify
