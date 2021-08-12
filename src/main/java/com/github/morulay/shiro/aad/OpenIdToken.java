@@ -25,12 +25,12 @@ public class OpenIdToken implements HostAuthenticationToken {
 
   @Override
   public Object getPrincipal() {
-    return token;
+    return getToken();
   }
 
   @Override
   public Object getCredentials() {
-    return token;
+    return getToken();
   }
 
   public String getToken() {
