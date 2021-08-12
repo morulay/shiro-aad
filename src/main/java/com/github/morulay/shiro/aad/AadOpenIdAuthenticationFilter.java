@@ -214,12 +214,17 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private void redirectToSavedRequest(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     String savedUri = request.getParameter(STATE_PARAM);
+    String loginUri = AadUtils.toAbsoluteUri(request, getLoginUrl());
+    if (savedUri == null || savedUri.equals(loginUri)) {
+      savedUri = getSuccessUrl();
+    }
+
     WebUtils.issueRedirect(request, response, savedUri);
   }
 
   private void sendChallengeOrRedirectToLogin(
       HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
-    if (noRedirectMimes != null && noRedirectMimes.size() > 0) {
+    if (noRedirectMimes != null && !noRedirectMimes.isEmpty()) {
       Enumeration<String> accepts = httpRequest.getHeaders("Accept");
       while (accepts.hasMoreElements()) {
         String mime = accepts.nextElement().toLowerCase();
