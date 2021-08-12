@@ -2,6 +2,7 @@ package com.github.morulay.shiro.aad.spring.boot.autoconfigure;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -56,7 +57,19 @@ public class ShiroAadProperties {
    * redirect using {@code 302 Found} to authorization endpoint of identity provider. Default is
    * {@code application/json}
    */
-  private Set<String> noRedirectMimes = new HashSet<String>(Arrays.asList("application/json"));
+  private Set<String> noRedirectMimes = new HashSet<>(Arrays.asList("application/json"));
+
+  /**
+   * {@link Map} of path to filters to allow filter chain configuration
+   *
+   * <pre>
+   * shiro:
+   *   aad:
+   *     filter-chain-defs:
+   *       "[/static/**]": anon
+   * </pre>
+   */
+  private Map<String, String> filterChainDefs;
 
   public boolean isEnabled() {
     return enabled;
@@ -136,5 +149,13 @@ public class ShiroAadProperties {
 
   public void setNoRedirectMimes(Set<String> noRedirectMimes) {
     this.noRedirectMimes = noRedirectMimes;
+  }
+
+  public Map<String, String> getFilterChainDefs() {
+    return filterChainDefs;
+  }
+
+  public void setFilterChainDefs(Map<String, String> filterChainDefs) {
+    this.filterChainDefs = filterChainDefs;
   }
 }
