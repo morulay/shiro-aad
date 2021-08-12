@@ -1,6 +1,7 @@
 package com.github.morulay.shiro.aad;
 
 import static java.lang.String.format;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
