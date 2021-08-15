@@ -42,8 +42,7 @@ public class ShiroAadAutoconfiguration {
         aadProperties.getTenant(),
         aadProperties.getRedirectUri(),
         aadProperties.getClientId(),
-        aadProperties.getRealmName(),
-        aadProperties.getNoRedirectMimes());
+        aadProperties.getRealmName());
   }
 
   @Bean

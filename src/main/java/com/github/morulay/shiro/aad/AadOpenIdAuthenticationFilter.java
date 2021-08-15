@@ -12,11 +12,10 @@ import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -33,6 +32,8 @@ import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.InvalidMediaTypeException;
+import org.springframework.http.MediaType;
 
 /**
  * Requires the requesting user to be {@link org.apache.shiro.subject.Subject#isAuthenticated()
@@ -68,7 +69,6 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private String tenant;
   private String clientId;
   private String realmName;
-  private Set<String> noRedirectMimes;
 
   /**
    * @param authority the Microsoft authority instance base URI, e.g. {@code
@@ -78,23 +78,14 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
    * @param clientId the ID assigned to your application by Azure AD when the application was
    *     registered
    * @param realmName the authorization realm name
-   * @param noRedirectMimes the {@link Set} of MIME types for which the filter will return {@code
-   *     401 Unauthorized} instead to redirect using {@code 302 Found} to authorization endpoint of
-   *     identity provider. Default is {@code application/json}
    */
   public AadOpenIdAuthenticationFilter(
-      String authority,
-      String tenant,
-      String redirectUri,
-      String clientId,
-      String realmName,
-      Set<String> noRedirectMimes) {
+      String authority, String tenant, String redirectUri, String clientId, String realmName) {
     this.authority = authority;
     this.tenant = tenant;
     setLoginUrl(redirectUri);
     this.clientId = clientId;
     this.realmName = realmName;
-    this.noRedirectMimes = noRedirectMimes;
   }
 
   @Override
@@ -222,20 +213,38 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     WebUtils.issueRedirect(request, response, savedUri);
   }
 
-  private void sendChallengeOrRedirectToLogin(
+  /**
+   * Based on "Accept" header, if "text/html" is accepted redirects using {@code 302 Found} to
+   * authorization endpoint of the identity provider, otherwise returns {@code 401 Unauthorized}
+   *
+   * @param httpRequest the {@link HttpServletRequest}
+   * @param httpResponse the {@link HttpServletResponse}
+   * @throws IOException an exception thrown if response can't be streamed back to the client
+   */
+  void sendChallengeOrRedirectToLogin(
       HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
-    if (noRedirectMimes != null && !noRedirectMimes.isEmpty()) {
-      Enumeration<String> accepts = httpRequest.getHeaders("Accept");
-      while (accepts.hasMoreElements()) {
-        String mime = accepts.nextElement().toLowerCase();
-        if (noRedirectMimes.contains(mime)) {
-          sendChallenge(httpResponse);
-          return;
-        }
+    var acceptHeaderValue = httpRequest.getHeader("Accept");
+    if (acceptHeaderValue == null) {
+      sendChallenge(httpResponse);
+      return;
+    }
+
+    List<MediaType> acceptedMediaTypes;
+    try {
+      acceptedMediaTypes = MediaType.parseMediaTypes(acceptHeaderValue);
+    } catch (InvalidMediaTypeException e) {
+      sendChallenge(httpResponse);
+      return;
+    }
+
+    for (MediaType acceptedMediaType : acceptedMediaTypes) {
+      if (acceptedMediaType.includes(MediaType.TEXT_HTML)) {
+        redirectToLogin(httpRequest, httpResponse);
+        return;
       }
     }
 
-    redirectToLogin(httpRequest, httpResponse);
+    sendChallenge(httpResponse);
   }
 
   private void sendChallenge(HttpServletResponse response) {
