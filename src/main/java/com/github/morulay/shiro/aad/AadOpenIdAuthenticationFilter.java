@@ -3,6 +3,7 @@ package com.github.morulay.shiro.aad;
 import static com.github.morulay.shiro.aad.AadUtils.toAbsoluteUri;
 import static java.lang.String.format;
 import static org.apache.shiro.web.util.WebUtils.toHttp;
+
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
