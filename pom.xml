@@ -51,7 +51,7 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
 		<spring-boot.version>2.5.3</spring-boot.version>
-		<shiro.version>1.7.1</shiro.version>
+		<shiro.version>1.8.0</shiro.version>
 	</properties>
 
 	<dependencyManagement>
