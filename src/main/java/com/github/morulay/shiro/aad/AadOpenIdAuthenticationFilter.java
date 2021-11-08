@@ -2,8 +2,12 @@ package com.github.morulay.shiro.aad;
 
 import static com.github.morulay.shiro.aad.AadUtils.toAbsoluteUri;
 import static java.lang.String.format;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.shiro.web.util.WebUtils.toHttp;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -12,6 +16,9 @@ import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +65,10 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private static final String ID_TOKEN_PARAM = "id_token";
   private static final String STATE_PARAM = "state";
   private static final String NONCE_PARAM = "nonce";
+  private static final String TOKEN_PARAM = "token";
+  private static final String TOKEN_PARAM_CHECK = "check";
+  private static final String TOKEN_PARAM_REFRESH = "refresh";
+  private static final String NEXT_CHECK_MIN_PARAM = "next_check_min";
 
   static final SimpleCookie ID_TOKEN_COOKIE_TEMPLATE = new SimpleCookie(ID_TOKEN_PARAM);
   private static final SimpleCookie STATE_COOKIE_TEMPLATE = new SimpleCookie(STATE_PARAM);
@@ -195,6 +206,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   private void storeIdTokenAsCookie(
       HttpServletRequest request, HttpServletResponse response, String idTokenString) {
     Cookie idTokenCookie = new SimpleCookie(ID_TOKEN_COOKIE_TEMPLATE);
+    idTokenCookie.setSameSite(SameSiteOptions.NONE);
     idTokenCookie.setValue(idTokenString);
     idTokenCookie.setHttpOnly(true);
     idTokenCookie.setMaxAge(30 * 60);
@@ -257,9 +269,15 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   protected void redirectToLogin(ServletRequest request, ServletResponse response)
       throws IOException {
     HttpServletRequest httpRequest = toHttp(request);
+    String state = saveCurrentRequest(httpRequest);
+    redirectToLogin(request, response, state);
+  }
+
+  protected void redirectToLogin(ServletRequest request, ServletResponse response, String state)
+      throws IOException {
+    HttpServletRequest httpRequest = toHttp(request);
     HttpServletResponse httpResponse = toHttp(response);
 
-    String state = saveCurrentRequest(httpRequest);
     Cookie stateCookie = new SimpleCookie(STATE_COOKIE_TEMPLATE);
     markAsCrossSiteCookie(stateCookie, httpRequest.isSecure());
     stateCookie.setValue(state);
@@ -311,6 +329,65 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     String idToken = ID_TOKEN_COOKIE_TEMPLATE.readValue(httpRequest, null);
     return new OpenIdToken(idToken, request.getRemoteHost());
+  }
+
+  @Override
+  protected boolean onLoginSuccess(
+      AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response)
+      throws Exception {
+    String tokenParam = request.getParameter(TOKEN_PARAM);
+    if (tokenParam == null) return true;
+
+    HttpServletRequest httpRequest = toHttp(request);
+    HttpServletResponse httpResponse = toHttp(response);
+    if (TOKEN_PARAM_CHECK.equals(tokenParam)) {
+      return handleTockenCheck(token, httpRequest, httpResponse);
+    }
+
+    if (TOKEN_PARAM_REFRESH.equals(tokenParam)) {
+      return handleTokenRefresh(httpResponse, httpRequest);
+    }
+
+    return true;
+  }
+
+  private boolean handleTockenCheck(
+      AuthenticationToken token, HttpServletRequest request, HttpServletResponse httpResponse)
+      throws IOException, ParseException {
+    String nextCheckParam = request.getParameter(NEXT_CHECK_MIN_PARAM);
+    long nextCheckMin = 0;
+    if (nextCheckParam != null) {
+      try {
+        nextCheckMin = Long.parseLong(nextCheckParam);
+      } catch (NumberFormatException nfe) {
+        httpResponse.sendError(
+            SC_BAD_REQUEST,
+            format(
+                "[%s] parameter should be the number of minutes to the next check",
+                NEXT_CHECK_MIN_PARAM));
+        return false;
+      }
+    }
+
+    String idToken = ((OpenIdToken) token).getToken();
+    JWTClaimsSet claimsSet = JWTParser.parse(idToken).getJWTClaimsSet();
+    ZonedDateTime expirationTime =
+        ZonedDateTime.ofInstant(claimsSet.getExpirationTime().toInstant(), ZoneId.systemDefault());
+    long expiresInMin = Duration.between(ZonedDateTime.now(), expirationTime).getSeconds() / 60;
+    String message = expiresInMin < nextCheckMin ? TOKEN_PARAM_REFRESH : TOKEN_PARAM_CHECK;
+    httpResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    httpResponse.getWriter().print(format("{\"token\": \"%s\"}", message));
+    httpResponse.setStatus(SC_OK);
+    return false;
+  }
+
+  private boolean handleTokenRefresh(HttpServletResponse response, HttpServletRequest request)
+      throws IOException {
+    StringBuffer urlBuf = request.getRequestURL();
+    String state = urlBuf.append(format("?%s=%s", TOKEN_PARAM, TOKEN_PARAM_CHECK)).toString();
+    ID_TOKEN_COOKIE_TEMPLATE.removeFrom(request, response);
+    redirectToLogin(request, response, state);
+    return false;
   }
 
   @Override
