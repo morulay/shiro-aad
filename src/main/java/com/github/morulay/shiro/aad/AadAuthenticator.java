@@ -2,10 +2,12 @@ package com.github.morulay.shiro.aad;
 
 import static java.lang.String.format;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.DefaultJOSEObjectTypeVerifier;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
@@ -14,6 +16,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -22,13 +25,11 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.Authenticator;
 import org.apache.shiro.authc.IncorrectCredentialsException;
-import org.apache.shiro.authc.LogoutAware;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AadAuthenticator implements Authenticator, LogoutAware {
+public class AadAuthenticator implements Authenticator {
 
   private static final String CLAIM_PREFERRED_USERNAME = "preferred_username";
 
@@ -96,7 +97,8 @@ public class AadAuthenticator implements Authenticator, LogoutAware {
     return token instanceof OpenIdToken;
   }
 
-  private JWTClaimsSet validateToken(String idToken) throws Exception {
+  private JWTClaimsSet validateToken(String idToken)
+      throws MalformedURLException, ParseException, BadJOSEException, JOSEException {
     // Create a JWT processor for the access tokens
     ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
     jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("jwt")));
@@ -108,19 +110,12 @@ public class AadAuthenticator implements Authenticator, LogoutAware {
     jwtProcessor.setJWSKeySelector(keySelector);
 
     jwtProcessor.setJWTClaimsSetVerifier(
-        new DefaultJWTClaimsVerifier<SecurityContext>(
+        new DefaultJWTClaimsVerifier<>(
             new JWTClaimsSet.Builder()
                 .issuer(format("%s/%s/v2.0", authority, tenantId))
                 .audience(clientId)
                 .build(),
-            new HashSet<String>(
-                Arrays.asList("sub", "iat", "exp", "nonce", CLAIM_PREFERRED_USERNAME))));
+            new HashSet<>(Arrays.asList("sub", "iat", "exp", "nonce", CLAIM_PREFERRED_USERNAME))));
     return jwtProcessor.process(idToken, null);
-  }
-
-  @Override
-  public void onLogout(PrincipalCollection principals) {
-    // TODO Auto-generated method stub
-
   }
 }

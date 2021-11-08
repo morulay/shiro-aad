@@ -6,6 +6,7 @@ import com.github.morulay.shiro.aad.AadOpenIdAuthenticationFilter;
 import com.github.morulay.shiro.aad.PrincipalFactory;
 import com.github.morulay.shiro.session.CookieRunAsManager;
 import com.github.morulay.shiro.session.CookieRunAsSessionManager;
+import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.servlet.Filter;
 import org.apache.shiro.authc.Authenticator;
@@ -41,8 +42,7 @@ public class ShiroAadAutoconfiguration {
         aadProperties.getTenant(),
         aadProperties.getRedirectUri(),
         aadProperties.getClientId(),
-        aadProperties.getRealmName(),
-        aadProperties.getNoRedirectMimes());
+        aadProperties.getRealmName());
   }
 
   @Bean
@@ -84,6 +84,12 @@ public class ShiroAadAutoconfiguration {
     DefaultShiroFilterChainDefinition chainDefinition = new DefaultShiroFilterChainDefinition();
     if (aadProperties.getPostLogoutUri() != null) {
       chainDefinition.addPathDefinition(aadProperties.getPostLogoutUri(), "anon");
+    }
+
+    if (aadProperties.getFilterChainDefs() != null) {
+      for (Entry<String, String> pathDef : aadProperties.getFilterChainDefs().entrySet()) {
+        chainDefinition.addPathDefinition(pathDef.getKey(), pathDef.getValue());
+      }
     }
 
     chainDefinition.addPathDefinition("/logout", "logout");

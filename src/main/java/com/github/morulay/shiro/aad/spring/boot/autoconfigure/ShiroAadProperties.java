@@ -1,8 +1,6 @@
 package com.github.morulay.shiro.aad.spring.boot.autoconfigure;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 import javax.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -52,11 +50,16 @@ public class ShiroAadProperties {
   private String realmName = "Azure Active Directory";
 
   /**
-   * {@link Set} of MIME types for which the filter will return {@code 401 Unauthorized} instead to
-   * redirect using {@code 302 Found} to authorization endpoint of identity provider. Default is
-   * {@code application/json}
+   * {@link Map} of path to filters to allow filter chain configuration
+   *
+   * <pre>
+   * shiro:
+   *   aad:
+   *     filter-chain-defs:
+   *       "[/static/**]": anon
+   * </pre>
    */
-  private Set<String> noRedirectMimes = new HashSet<String>(Arrays.asList("application/json"));
+  private Map<String, String> filterChainDefs;
 
   public boolean isEnabled() {
     return enabled;
@@ -130,11 +133,11 @@ public class ShiroAadProperties {
     this.realmName = realmName;
   }
 
-  public Set<String> getNoRedirectMimes() {
-    return noRedirectMimes;
+  public Map<String, String> getFilterChainDefs() {
+    return filterChainDefs;
   }
 
-  public void setNoRedirectMimes(Set<String> noRedirectMimes) {
-    this.noRedirectMimes = noRedirectMimes;
+  public void setFilterChainDefs(Map<String, String> filterChainDefs) {
+    this.filterChainDefs = filterChainDefs;
   }
 }
