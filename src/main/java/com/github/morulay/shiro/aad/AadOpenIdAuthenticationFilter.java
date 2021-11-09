@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.BearerToken;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.servlet.Cookie;
@@ -328,7 +329,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     String idToken = ID_TOKEN_COOKIE_TEMPLATE.readValue(httpRequest, null);
-    return new OpenIdToken(idToken, request.getRemoteHost());
+    return new BearerToken(idToken, request.getRemoteHost());
   }
 
   @Override
@@ -369,7 +370,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       }
     }
 
-    String idToken = ((OpenIdToken) token).getToken();
+    String idToken = ((BearerToken) token).getToken();
     JWTClaimsSet claimsSet = JWTParser.parse(idToken).getJWTClaimsSet();
     ZonedDateTime expirationTime =
         ZonedDateTime.ofInstant(claimsSet.getExpirationTime().toInstant(), ZoneId.systemDefault());

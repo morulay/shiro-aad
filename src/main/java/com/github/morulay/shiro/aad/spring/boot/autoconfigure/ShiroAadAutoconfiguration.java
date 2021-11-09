@@ -1,17 +1,17 @@
 package com.github.morulay.shiro.aad.spring.boot.autoconfigure;
 
-import com.github.morulay.shiro.aad.AadAuthenticator;
 import com.github.morulay.shiro.aad.AadLogoutFilter;
 import com.github.morulay.shiro.aad.AadOpenIdAuthenticationFilter;
+import com.github.morulay.shiro.aad.AadRealm;
 import com.github.morulay.shiro.aad.PrincipalFactory;
 import com.github.morulay.shiro.session.CookieRunAsManager;
 import com.github.morulay.shiro.session.CookieRunAsSessionManager;
 import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.servlet.Filter;
-import org.apache.shiro.authc.Authenticator;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.mgt.SessionStorageEvaluator;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.spring.config.web.autoconfigure.ShiroWebAutoConfiguration;
 import org.apache.shiro.spring.web.config.DefaultShiroFilterChainDefinition;
 import org.apache.shiro.spring.web.config.ShiroFilterChainDefinition;
@@ -98,9 +98,8 @@ public class ShiroAadAutoconfiguration {
   }
 
   @Bean
-  public Authenticator authenticator(
-      @Autowired(required = false) PrincipalFactory principalFactory) {
-    return new AadAuthenticator(
+  public Realm aadRealm(@Autowired(required = false) PrincipalFactory principalFactory) {
+    return new AadRealm(
         aadProperties.getAuthority(),
         aadProperties.getTenantId(),
         aadProperties.getClientId(),

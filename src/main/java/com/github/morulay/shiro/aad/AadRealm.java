@@ -23,17 +23,18 @@ import java.util.Arrays;
 import java.util.HashSet;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.Authenticator;
+import org.apache.shiro.authc.BearerToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.realm.Realm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AadAuthenticator implements Authenticator {
+public class AadRealm implements Realm {
 
   private static final String CLAIM_PREFERRED_USERNAME = "preferred_username";
 
-  private static final Logger log = LoggerFactory.getLogger(AadAuthenticator.class);
+  private static final Logger log = LoggerFactory.getLogger(AadRealm.class);
 
   private String authority;
   private String tenantId;
@@ -51,7 +52,7 @@ public class AadAuthenticator implements Authenticator {
    * @param principalFactory optional {@link PrincipalFactory} instance to take control on primary
    *     principal creation
    */
-  public AadAuthenticator(
+  public AadRealm(
       String authority,
       String tenantId,
       String clientId,
@@ -65,13 +66,18 @@ public class AadAuthenticator implements Authenticator {
   }
 
   @Override
-  public AuthenticationInfo authenticate(AuthenticationToken token) {
+  public String getName() {
+    return realmName;
+  }
+
+  @Override
+  public AuthenticationInfo getAuthenticationInfo(AuthenticationToken token) {
     if (!supports(token)) {
       log.warn("Not supported token [{}]", token.getClass());
       throw new IncorrectCredentialsException();
     }
 
-    OpenIdToken idToken = (OpenIdToken) token;
+    BearerToken idToken = (BearerToken) token;
     JWTClaimsSet claims = null;
     try {
       claims = validateToken(idToken.getToken());
@@ -93,8 +99,9 @@ public class AadAuthenticator implements Authenticator {
     return new SimpleAuthenticationInfo(principal, token.getCredentials(), realmName);
   }
 
-  private boolean supports(AuthenticationToken token) {
-    return token instanceof OpenIdToken;
+  @Override
+  public boolean supports(AuthenticationToken token) {
+    return token instanceof BearerToken;
   }
 
   private JWTClaimsSet validateToken(String idToken)
