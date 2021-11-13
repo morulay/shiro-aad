@@ -409,6 +409,7 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   public void afterCompletion(ServletRequest request, ServletResponse response, Exception exception)
       throws Exception {
     Subject subject = SecurityUtils.getSubject();
-    subject.logout();
+    org.apache.shiro.mgt.SecurityManager securityManager = SecurityUtils.getSecurityManager();
+    securityManager.logout(subject);
   }
 }
