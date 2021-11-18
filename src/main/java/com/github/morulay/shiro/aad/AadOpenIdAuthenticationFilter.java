@@ -19,6 +19,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,7 +163,20 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
     validateNonce(NONCE_COOKIE_TEMPLATE.readValue(request, response), oidcResponse);
     removeScopeAndNonceCookies(request, response);
 
-    storeIdTokenAsCookie(request, response, oidcResponse.getIDToken().getParsedString());
+    int idTokenCookieMaxAge = 60 * 60; // One hour
+    try {
+      Date expirationTime = oidcResponse.getIDToken().getJWTClaimsSet().getExpirationTime();
+      idTokenCookieMaxAge = (int) ((expirationTime.getTime() - System.currentTimeMillis()) / 1000);
+    } catch (ParseException e) {
+      LOG.warn(
+          format(
+              "Unable to get ID token expiration time. The id_token cookie Max-Age is set to %s seconds",
+              idTokenCookieMaxAge),
+          e);
+    }
+
+    storeIdTokenAsCookie(
+        request, response, oidcResponse.getIDToken().getParsedString(), idTokenCookieMaxAge);
     redirectToSavedRequest(request, response);
   }
 
@@ -205,12 +219,12 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
   }
 
   private void storeIdTokenAsCookie(
-      HttpServletRequest request, HttpServletResponse response, String idTokenString) {
+      HttpServletRequest request, HttpServletResponse response, String idTokenString, int maxAge) {
     Cookie idTokenCookie = new SimpleCookie(ID_TOKEN_COOKIE_TEMPLATE);
     idTokenCookie.setSameSite(SameSiteOptions.NONE);
     idTokenCookie.setValue(idTokenString);
     idTokenCookie.setHttpOnly(true);
-    idTokenCookie.setMaxAge(30 * 60);
+    idTokenCookie.setMaxAge(maxAge);
     idTokenCookie.setPath(request.getContextPath());
     idTokenCookie.saveTo(request, response);
   }
