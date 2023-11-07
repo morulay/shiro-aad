@@ -3,7 +3,6 @@ package com.github.morulay.shiro.aad;
 import static java.util.Objects.isNull;
 
 import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.util.Assert;
 
 public class AadUtils {
