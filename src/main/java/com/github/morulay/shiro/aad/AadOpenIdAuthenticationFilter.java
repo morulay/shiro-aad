@@ -333,11 +333,19 @@ public class AadOpenIdAuthenticationFilter extends AuthenticatingFilter {
       return toAbsoluteUri(request, "/");
     }
 
-    StringBuffer urlBuf = request.getRequestURL();
-    String queryString = request.getQueryString();
-    urlBuf.append(queryString == null ? "" : queryString);
-    return urlBuf.toString();
+    return getFullURL(request);
   }
+  
+  private static String getFullURL(HttpServletRequest request) {
+	    StringBuilder requestURL = new StringBuilder(request.getRequestURL().toString());
+	    String queryString = request.getQueryString();
+
+	    if (queryString == null) {
+	        return requestURL.toString();
+	    } else {
+	        return requestURL.append('?').append(queryString).toString();
+	    }
+	}
 
   @Override
   protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
